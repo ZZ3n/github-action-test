@@ -7,7 +7,7 @@ import java.util.Map;
 
 @RestController
 public class HelloController {
-    @GetMapping
+    @GetMapping("/")
     public Map<String, String> hello() {
         return Map.of("status", "hello");
     }
