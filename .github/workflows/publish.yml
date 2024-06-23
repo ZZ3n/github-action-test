@@ -15,8 +15,14 @@ on:
 
 jobs:
   build:
+    environment: dev
     env:
       BOOTJAR_NAME: 'github-action-test-0.0.1-SNAPSHOT.jar'
+      UPLOAD_NAME: 'bootJar.jar'
+      AWS_REGION: 'ap-northeast-2'
+      AWS_CODEDEPLOY_APPLICATION: 'MySpringWebApp'
+      AWS_CODEDEPLOY_DEPLOY_GROUP: 'development'
+      AWS_S3_BUCKET_NAME: 'chen-deployment-bucket'
 
     runs-on: ubuntu-latest
     permissions:
@@ -39,8 +45,18 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
     
-    - name: Find BootJar
-      run: cp ./build/libs/$BOOTJAR_NAME ./bootJar.jar
+    - name: Copy BootJar
+      run: cp ./build/libs/$BOOTJAR_NAME ./$UPLOAD_NAME
 
-    - name: Test
-      run: ls -al
+    - name: Configuration for AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: $AWS_YEOLSWE
+        aws-secret-access-key: $AWS_BIMIL
+
+    - name: Upload to S3
+      run: aws deploy push --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --ignore-hidden-files --s3-location s3://$AWS_S3_BUCKET_NAME/deployments/$GITHUB_SHA.zip --source .
+      
+    # - name: EC2에 배포
+      # run: aws deploy create-deployment --application-name ${{ env.AWS_CODEDEPLOY_APPLICATION }} --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name ${{ env.AWS_CODEDEPLOY_DEPLOY_GROUP }} --s3-location bucket=$AWS_S3_BUCKET_NAME,key=deployments/$GITHUB_SHA.zip,bundleType=zip
